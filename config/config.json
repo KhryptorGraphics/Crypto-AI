@@ -1,0 +1,29 @@
+{
+  "development": {
+    "username": "jeevan",
+    "password": "jeevan",
+    "database": "crypto",
+    "host": "localhost",
+    "dialect": "postgres",
+    "pool": {
+      "max": 5,
+      "min": 1,
+      "idle": 200000,
+     "acquire": 200000
+   }
+  },
+  "test": {
+    "username": "root",
+    "password":  "jeevan",
+    "database": "database_test",
+    "host": "localhost",
+    "dialect": "postgres"
+  },
+  "production": {
+    "username": "root",
+    "password": "jeevan",
+    "database": "database_production",
+    "host": "localhost",
+    "dialect": "postgres"
+  }
+}
