@@ -212,11 +212,23 @@ async function createDataRange(symboldata, time) {
   }
 
 }
-
+// Check if there is bug in push of object into the array similar to that one in react due to pass by reference.
 
 async function updateDataRange(symboldata, datarange_database) {
 
   try {
+    /*
+    var options2 = {
+      method: 'GET',
+      uri: 'http://localhost:3000/api/data_1h/?symbol=ETHUSDT&class=ddd',
+      headers: { 'content-type': 'application/JSON' }
+    }
+
+
+    const c2 = await rp(options2);
+    console.log('data_check', JSON.parse(c2))
+    
+    */
 
     symbol = await symboldata.class_name
     var datarange_database_symbol = JSON.parse(datarange_database).filter(element => element.class_name == symbol)
@@ -291,6 +303,7 @@ async function updateDataRange(symboldata, datarange_database) {
 
         }
         data_all.push(crypto_data);
+        console.log('data_all', data_all)
 
       })
 
@@ -307,7 +320,7 @@ async function updateDataRange(symboldata, datarange_database) {
       //lets post 500 data at once. Currently total data = 13*500 
 
       const c1 = await rp(options);
-      
+
 
 
       // const [x1, x2] = await Promise.all(historicaldata, c1)
@@ -333,6 +346,7 @@ async function updateDataRange(symboldata, datarange_database) {
         headers: { 'content-type': 'application/JSON' },
         url: url, body: JSON.stringify(time)
       })
+
     }
   
 }
