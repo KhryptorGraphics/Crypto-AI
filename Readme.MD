@@ -1,6 +1,9 @@
 - Instal nodejs
 - sudo npm install express-generator -g
-- change directory to the project folder
+- sudo npm install -g sequelize-cli
+- To install Sequelize.js module, type this command.
+
+npm install --save sequelize
 - Install postgresql (npm install --save pg pg-hstore)
 - npm install 
 - in config/config.json define the username/password for the postgres connection
