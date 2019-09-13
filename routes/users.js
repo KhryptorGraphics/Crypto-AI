@@ -8,6 +8,7 @@ var router = express.Router();
 var request = require('request')
 var rp = require('request-promise')
 var url = require('url')
+const WebSocket = require('ws');
 const { Client } = require('pg')
 
 const client = new Client({
@@ -22,9 +23,11 @@ const client = new Client({
 client.connect()
 
 const binanceconfig = {
-  API_KEY: 'SjT2cMc5HUNQpcgF1B9qUYIweSsRKvYcmKU48B5rw3GKRDSFTlXEBOVBulDVPkaf',
-  API_SECRET: 'NhbasWd4YaqmFfcPX0dhySPmkyeXxvGQr3GbfEyXykL3ZabQwy15f270B8AVQjsU',
+  API_KEY: '7TU23VLBxD97IkxeLlNeW0yxOkdPU21dr0SK8BdZcdVKZlFuXlSVbaS5OlPEE5cg',
+  API_SECRET: '5keOL6cLaAVphppXXEsnwNY8aPeFNPBYFbpBDGbh3TJfPBm32b89Ycd0sROodPHv',
   HOST_URL: 'https://api.binance.com',
+  useServerTime: true,
+  recvWindow: 60000, 
 }
 
 const data = {
@@ -33,11 +36,12 @@ const data = {
   timestamp: Date.now(),
 };
 
-const buildSign = function (data, config) {
-  const hmac = crypto.createHmac('sha256', config.API_SECRET).update(data).digest('hex')
+const buildSign = function (data, binanceconfig) {
+  const hmac = crypto.createHmac('sha256', binanceconfig.API_SECRET).update(data).digest('hex')
   console.log(hmac)
   return hmac
 }
+
 
 function createSymbolList(price, datalocation) {
   return new Promise((resolve, reject) => {
@@ -432,7 +436,179 @@ poller_historicalPrice.poll();
 
 
 
+datastring = qs.stringify(data);
+const signature = buildSign(datastring, binanceconfig);
 
+
+
+
+
+  //test connectivity
+/*
+   url1 = 'https://api.binance.com/api/v3/myTrades' + '?' + datastring +'&signature=' + signature
+   console.log(url1)
+   request({method: 'GET', uri:url1, headers: {
+    'X-MBX-APIKEY': binanceconfig.API_KEY,},}, function (error, response, body) {
+    
+    console.log(binanceconfig.API_KEY)
+    console.log('error:', error); // Print the error if one occurred and handle it
+    console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+    console.log(JSON.parse(body))
+   });
+
+*/
+   const orderdata = {
+    symbol: 'ETHBTC',
+    side: 'BUY',
+    type: 'LIMIT',
+    timeInForce: 'GTC',
+    quantity:	10,
+    price: 0.01,
+    recvWindow:	5000,
+    timestamp: Date.now(),
+  };
+
+  const signature2 = buildSign(qs.stringify(orderdata), binanceconfig);
+/*
+  url1 = 'https://api.binance.com/api/v3/order' + '?' + qs.stringify(orderdata) +'&signature=' + signature2
+  console.log(url1)
+  request({method: 'POST', uri:url1, headers: {
+   'X-MBX-APIKEY': binanceconfig.API_KEY,},}, function (error, response, body) {
+   
+   console.log(binanceconfig.API_KEY)
+   console.log('error:', error); // Print the error if one occurred and handle it
+   console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+   console.log(JSON.parse(body))
+  });
+*/
+
+const openOrderData = {
+  timestamp: Date.now(),
+};
+
+  /*const signatureOpen = buildSign(qs.stringify(openOrderData), binanceconfig);
+  url1 = 'https://api.binance.com/api/v3/openOrders' + '?' + qs.stringify(openOrderData) +'&signature=' + signatureOpen
+  console.log(url1)
+  request({method: 'GET', uri:url1, headers: {
+   'X-MBX-APIKEY': binanceconfig.API_KEY,},}, function (error, response, body) {
+   
+   console.log(binanceconfig.API_KEY)
+   console.log('error:', error); // Print the error if one occurred and handle it
+   console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+   console.log(JSON.parse(body))
+  });
+
+*/
+
+const cancelOrderData = {
+  symbol : 'ETHBTC',
+  orderId: 478341657,
+  timestamp: Date.now(),
+};
+const signatureCancel = buildSign(qs.stringify(cancelOrderData), binanceconfig)
+
+/*url1 = 'https://api.binance.com/api/v3/order' + '?' + qs.stringify(cancelOrderData) +'&signature=' + signatureCancel
+console.log(url1)
+request({method: 'DELETE', uri:url1, headers: {
+ 'X-MBX-APIKEY': binanceconfig.API_KEY,},}, function (error, response, body) {
+ 
+ console.log(binanceconfig.API_KEY)
+ console.log('error:', error); // Print the error if one occurred and handle it
+ console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+ console.log(JSON.parse(body))
+});
+
+*/
+/*
+const accountInformation = {
+  timestamp: Date.now(),
+};
+const signatureAccount = buildSign(qs.stringify(accountInformation), binanceconfig) 
+url1 = 'https://api.binance.com/api/v3/account' + '?' + qs.stringify(accountInformation) +'&signature=' + signatureAccount
+console.log(url1)
+request({method: 'GET', uri:url1, headers: {
+ 'X-MBX-APIKEY': binanceconfig.API_KEY,},}, function (error, response, body) {
+ 
+ console.log(binanceconfig.API_KEY)
+ console.log('error:', error); // Print the error if one occurred and handle it
+ console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+ console.log(JSON.parse(body))
+});
+*/
+
+async function accountInformation_nonzero (binanceconfig) {
+
+
+  try {
+    const accountInformation = {
+        timestamp: Date.now(),
+    };
+    const signatureAccount = buildSign(qs.stringify(accountInformation), binanceconfig) 
+    url_accountinfo = 'https://api.binance.com/api/v3/account' + '?' + qs.stringify(accountInformation) +'&signature=' + signatureAccount
+
+     wallet = [];
+    let account = await rp.get({ uri: url_accountinfo, headers: {
+      'X-MBX-APIKEY': binanceconfig.API_KEY,}, json: true})
+    
+    
+    return new Promise((resolve, reject) => {
+    account.balances.forEach(element => {
+
+      if (element.free != 0.0 || element.locked != 0.0 ) {
+          wallet.push(element)
+      }
+    })
+    resolve(wallet)
+    })
+
+  } catch (error) {
+    console.log('Error', error)
+  }
+}
+
+
+let symbola = "BTC";
+let value = 0.01;
+
+async function account_info(binanceconfig, symbol, value) {
+
+  try {
+  console.log('binanceconfig', binanceconfig)
+  let check =   await accountInformation_nonzero(binanceconfig);
+  //console.log('check', check)
+  
+  check.forEach(element => {
+    console.log('element', symbol); 
+    console.log('value', value);
+    if (element.asset == symbol) {
+       if (element.free > value) {
+         console.log('sufficient fund to do this operation')
+        throw new Error('sufficient fund to do this operation')
+
+       }
+       else {
+         throw new Error('Insufficient fund to do this operation')
+       }
+    } else {
+      throw new Error('Symbol not found')
+    }
+  })
+}
+ catch (error) {
+  console.log('Error', error)
+}
+}
+
+
+
+const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@kline_1h');
+
+ws.on('message', function incoming(data) {
+    console.log('data',data);
+});
+
+
+//account_info(binanceconfig, symbola, value);
 
 router.get('/submit', function (req, res, next) {
   res.render('index')
@@ -443,25 +619,27 @@ router.post('/submit', function (req, res, next) {
   res.redirect('/users/submit')
 })
 
+
+
+
+// Click 
+// Show funds 
+// Field for user input for amount of funds 
+// Tranging method , Leeching
+
+// 1 hour period, Trade on only the currencies that are in green in % change in the last hour. 
+// 10 % gain, out , 5% loss out 
+
+
+
+
+
+
+
+
+
 module.exports = router;
 
-
-
-
-
-  //test connectivity
-
-  /* url1 = 'https://api.binance.com/api/v3/myTrades' + '?' + datastring +'&signature=' + signature 
-   console.log(url1)
-   request({method: 'GET', uri:url1, headers: {
-    'X-MBX-APIKEY': binanceconfig.API_KEY,},}, function (error, response, body) {
-    
-    console.log(binanceconfig.API_KEY)
-    console.log('error:', error); // Print the error if one occurred and handle it
-    console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-    console.log(JSON.parse(body))
-   });
-*/
 
 /*
   request.post('https://api.binance.com//api/v1/ping', function (error, response, body) {
